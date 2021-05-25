@@ -1,12 +1,14 @@
 const express = require('express');
 const app = express();
-const port = 3306;
+const port = 3348;
+const cors = require('cors');
+const route = require('./route');
 
-app.get('/',(req,res)=>{
-    res.status(200).json({
-        message:'Hi Devs'
-    })
-})
+
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }))
+app.use(route);
 
 app.listen(port,()=>{
     console.log(`Server is running on the port ${port}`);
