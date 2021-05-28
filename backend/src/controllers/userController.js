@@ -1,16 +1,19 @@
 const conn = require("../database/connection");
 const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
+var salt = bcrypt.genSaltSync();
 
 module.exports = {
     async create(req,res){
         const user = {
             username:req.body.username,
             email:req.body.email,
-            password:req.body.email
+            password:String(req.body.password)
         }
 
-        await conn.query("SELECT * FROM usuarios WHERE email=?",[user.email],(err,results)=>{
+        
+
+        conn.query("SELECT * FROM usuarios WHERE email=?",[user.email],(err,results)=>{
             if(err){
                 return res.status(500).json({
                    message:err.message,
@@ -19,11 +22,12 @@ module.exports = {
             }
             if(results.length > 0){
                 return res.status(409).json({
-                    message:'Email já cadastrado'
+                    message:'Email já cadastrado',
+                    code:409
                 });
             }
 
-            bcrypt.hash(user.password, 10, (errBycript,hash)=>{
+            bcrypt.hash(user.password, salt, (errBycript,hash)=>{
                 if(errBycript){
                     return res.status(500).json({ 
                         message:errBycript.message
@@ -51,12 +55,12 @@ module.exports = {
     async login(req,res){
         const user = {
             email:req.body.email,
-            password:req.body.email
+            password:req.body.password
         }
 
         const sql = "SELECT * FROM usuarios WHERE email=?";
 
-        await conn.query(sql,[user.email],(err,results)=>{
+         conn.query(sql,[user.email],(err,results)=>{
             if(err){
                 return res.status(500).json({
                    message:err.message,
@@ -64,8 +68,9 @@ module.exports = {
                 });
             }
             if(results.length < 1){
-                return res.status(401).json({
-                    message:'Falha na autenticação'
+                return res.status(401).send({
+                    message:'Falha na autenticação',
+                    code:409
                 });
             }
 
@@ -92,8 +97,8 @@ module.exports = {
                 }else{
                     res.status(401).send({ message: 'Falha na autenticação '});
                 }
+                
             });
-
         });
     }
         
